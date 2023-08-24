@@ -28,7 +28,6 @@ function App() {
     `;
     document.head.appendChild(style);
   };
-  console.log("index render");
   useMemo(() => {
     createStyle();
   }, []);

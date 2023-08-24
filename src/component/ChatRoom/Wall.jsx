@@ -13,7 +13,7 @@ function Wall({ text, bgColor, txtColor }) {
         alignItems: "center",
         zIndex: "1",
         heitgh: "0",
-        marginTop: "0.5rem",
+        marginTop: "0.7rem",
         marginBottom: "0.5rem",
         opacity: 0.8,
       }}

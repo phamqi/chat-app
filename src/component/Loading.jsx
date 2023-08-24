@@ -13,6 +13,7 @@ function Loading({ color, width }) {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        zIndex: "99999999",
       }}
     >
       <CircularProgress

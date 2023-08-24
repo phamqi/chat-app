@@ -4,7 +4,7 @@ import { colorOuterActive, colorTxt, colorTxtBlur } from "../../../constants";
 import CardItem from "../CardItem";
 import SentimentDissatisfiedOutlinedIcon from "@mui/icons-material/SentimentDissatisfiedOutlined";
 
-function Sibar({ selectFriend, friendList, loading }) {
+function Sidebar({ selectFriend, friendList, loading }) {
   console.log("abc", friendList);
   const random = Math.floor(Math.random() * (6 - 3) + 3);
   return (
@@ -79,4 +79,4 @@ function Sibar({ selectFriend, friendList, loading }) {
     </Box>
   );
 }
-export default memo(Sibar);
+export default memo(Sidebar);

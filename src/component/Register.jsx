@@ -1,15 +1,9 @@
-import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import { Box, Grid, TextField } from "@mui/material";
 import { Container } from "@mui/system";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import AddIcon from "@mui/icons-material/Add";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db, storage } from "../FireBase/config";
-
+import { createUser } from "../FireBase";
 import { colorBg, colorOnBg } from "../constants";
 import Loading from "./Loading";
 
@@ -25,44 +19,25 @@ function Register(props) {
     if (!img) {
       alert("Please choose an img");
     } else {
-      try {
-        setLoading(true);
-        const res = await createUserWithEmailAndPassword(auth, email, password);
-        const storageRef = ref(storage, displayName.trim() + Date.now());
-        const uploadTask = uploadBytesResumable(storageRef, img);
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            const progress =
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log("Upload is " + progress + "% done");
-          },
-          (error) => {},
-          () => {
-            getDownloadURL(uploadTask.snapshot.ref).then(
-              async (downloadURL) => {
-                Promise.all([
-                  await updateProfile(res.user, {
-                    displayName: displayName,
-                    photoURL: downloadURL,
-                  }),
-                  await setDoc(doc(db, "users", res.user.uid), {
-                    uid: res.user.uid,
-                    displayName: displayName,
-                    searchName: displayName.toLowerCase(),
-                    email,
-                    photoURL: downloadURL,
-                  }),
-                  await setDoc(doc(db, "userFriends", res.user.uid), {}),
-                ]);
-                setLoading(false);
-                navigate("/");
-              }
-            );
-          }
-        );
-      } catch (error) {
-        console.log(error);
+      if (!displayName || !email || !password) {
+        alert("Please enter a value of the filed");
+      } else {
+        try {
+          setLoading(true);
+          const create = new Promise(function (resolve, reject) {
+            createUser(displayName, email, password, img);
+          });
+          create
+            .then(function () {
+              setLoading(false);
+              navigate("/");
+            })
+            .catch(function () {
+              setLoading(false);
+            });
+        } catch (error) {
+          alert(error.message);
+        }
       }
     }
   };

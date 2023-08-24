@@ -6,7 +6,7 @@ const colorInner = "#36393F";
 const colorOuter = "#2F3136";
 const colorOuterActive = "#42464D";
 const EmptySearchMsg = "Please enter a user name";
-const SearchNullMsg = "The user dosen't exists";
+const SearchNullMsg = "The user doesn't exists";
 export {
   colorOnBg,
   colorBg,

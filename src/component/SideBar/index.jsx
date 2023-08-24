@@ -1,35 +1,26 @@
 import CloseIcon from "@mui/icons-material/Close";
 import CreateOutlinedIcon from "@mui/icons-material/CreateOutlined";
 import SaveAsOutlinedIcon from "@mui/icons-material/SaveAsOutlined";
-import { Avatar, Box, Skeleton } from "@mui/material";
+import { Avatar, Box } from "@mui/material";
 import { getAuth, signOut, updatePassword } from "firebase/auth";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-  where,
-} from "firebase/firestore";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { addFriend, getFriends } from "../../../FireBase";
+import { auth } from "../../../FireBase/config";
 import { colorOuter, colorTxtBlur } from "../../../constants";
-import { auth, db } from "../../../FireBase/config";
 import Wall from "../Wall";
 import ListFriend from "./ListFriend";
 import Search from "./Search";
 import UserInfo from "./UserInfo";
-import { SearchUser, addFriend, getFriends } from "../../../FireBase";
 
-function Sidebar({ getFriend, user }) {
+function Sibar({ getFriend, user }) {
   const navigate = useNavigate();
+  const [dataSearch, setDataSearch] = useState([]);
   const [friendList, setFriendList] = useState([]);
+  const [loadingSearch, setLoadingSearch] = useState(true);
   const [loadingFriend, setLoadingFriend] = useState(true);
+  const [loadingUpdatePsw, setLoadingUpdatePsw] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [edit, setEdit] = useState(true);
   const handleLogout = () => {
@@ -42,17 +33,12 @@ function Sidebar({ getFriend, user }) {
   };
 
   useEffect(() => {
-    const clean = async () => {
-      if (user) {
-        const friends = await getFriends(user.uid);
-        setFriendList(friends);
-        console.log("friends", friends);
-        setLoadingFriend(false);
-      }
-    };
-    return () => {
-      clean();
-    };
+    if (user) {
+      const friends = getFriends(user.uid);
+      setFriendList(friends);
+      setLoadingFriend(false);
+      console.log("alo", friends);
+    }
   }, [user]);
   const selectFriend = (item) => {
     getFriend(item);
@@ -123,6 +109,7 @@ function Sidebar({ getFriend, user }) {
 
         <Wall text={"Search"} bgColor={colorOuter} txtColor={colorTxtBlur} />
         <Search
+          loadingSearch={loadingSearch}
           onAddFriend={addFriend}
           friendList={friendList && Object.entries(friendList)}
           onSelectFriend={selectFriend}
@@ -133,11 +120,11 @@ function Sidebar({ getFriend, user }) {
           bgColor={colorOuter}
           txtColor={colorTxtBlur}
         />
-        {/* <ListFriend
+        <ListFriend
           friendList={friendList}
           selectFriend={selectFriend}
           loading={loadingFriend}
-        /> */}
+        />
       </Box>
       {user && (
         <Box
@@ -255,4 +242,4 @@ function Sidebar({ getFriend, user }) {
     </Box>
   );
 }
-export default memo(Sidebar);
+export default memo(Sibar);

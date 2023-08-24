@@ -1,4 +1,4 @@
-import { Button, Grid } from "@mui/material";
+import { Button, Grid, IconButton } from "@mui/material";
 import { Box } from "@mui/system";
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,13 +10,13 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 function ChatRoom(props) {
-  console.log("chat room render");
   const [friend, setFriend] = useState();
   const [translate, setTranslate] = useState(false);
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const getFriend = (childData) => {
     setFriend(childData);
+    setTranslate(false);
   };
   useEffect(() => {
     if (!user) {
@@ -25,6 +25,9 @@ function ChatRoom(props) {
   }, [user]);
 
   useEffect(() => {
+    if (window.innerWidth < 600) {
+      setTranslate(true);
+    }
     const gridContainer = document.getElementById("grid_container");
     const swip = () => {
       let startX, moveX;
@@ -38,7 +41,6 @@ function ChatRoom(props) {
       gridContainer.addEventListener(
         "touchmove",
         function (e) {
-          e.preventDefault();
           moveX = e.touches[0].clientX;
         },
         { passive: false }
@@ -55,24 +57,29 @@ function ChatRoom(props) {
         },
         { passive: false }
       );
-      console.log(translate);
     };
     return () => {
       swip();
     };
   }, []);
   useEffect(() => {
+    const mobileWidth = 600;
     const clean = () => {
       window.addEventListener("resize", function (e) {
-        setTranslate(false);
+        if (this.window.innerWidth > mobileWidth) {
+          setTranslate(false);
+        }
       });
     };
     return () => {
       clean();
     };
-  });
-  const onTranslate = () => {
-    setTranslate(!translate);
+  }, []);
+  const translateTrue = () => {
+    setTranslate(true);
+  };
+  const translateFalse = () => {
+    setTranslate(false);
   };
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -101,26 +108,6 @@ function ChatRoom(props) {
           justifyContent: "flex-end",
         }}
       >
-        <Button
-          onClick={onTranslate}
-          type="button"
-          sx={{
-            position: "absolute",
-            zIndex: "99999",
-            bottom: "50%",
-            right: "0%",
-            color: `${colorTxtBlur}`,
-            minWidth: "35px",
-            height: "35px",
-            borderRadius: "10%",
-            display: { xs: "flex", sm: "none", md: "none" },
-            padding: "0",
-            backgroundColor: `${colorOuter}`,
-            boxShadow: `0 0 1px  ${colorTxtBlur}`,
-          }}
-        >
-          {translate ? <ArrowForwardIosIcon /> : <ArrowBackIosNewIcon />}
-        </Button>
         <Grid
           item
           xs={12}
@@ -137,7 +124,32 @@ function ChatRoom(props) {
             transitionDuration: { xs: "0.7s", sm: "0s", md: "0s" },
           }}
         >
-          <ChatWindow friend={friend} />
+          <Box sx={{ width: "100%", height: "100%", position: "relative" }}>
+            <Button
+              type="button"
+              sx={{
+                position: "absolute",
+                zIndex: "99999",
+                top: "3%",
+                right: "0%",
+                color: `${colorTxtBlur}`,
+                minWidth: "30px",
+                height: "30px",
+                borderRadius: "15%",
+                display: { xs: "flex", sm: "none" },
+                padding: "0",
+                backgroundColor: `${colorOuter}`,
+                border: `none`,
+              }}
+            >
+              {translate ? (
+                <ArrowForwardIosIcon onClick={translateFalse} />
+              ) : (
+                <ArrowBackIosNewIcon onClick={translateTrue} />
+              )}
+            </Button>
+            <ChatWindow friend={friend} />
+          </Box>
         </Grid>
         <Grid
           item

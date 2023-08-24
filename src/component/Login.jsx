@@ -1,58 +1,58 @@
+import FacebookOutlinedIcon from "@mui/icons-material/FacebookOutlined";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import GoogleIcon from "@mui/icons-material/Google";
 import { Box, Button, Grid, TextField } from "@mui/material";
 import { Container } from "@mui/system";
-import FacebookOutlinedIcon from "@mui/icons-material/FacebookOutlined";
-import GoogleIcon from "@mui/icons-material/Google";
-
 import {
   FacebookAuthProvider,
-  signInWithRedirect,
+  GithubAuthProvider,
+  GoogleAuthProvider,
   signInWithEmailAndPassword,
-  signInWithPopup,
-  getAdditionalUserInfo,
 } from "firebase/auth";
 import React, { useState } from "react";
-import { colorBg, colorOnBg } from "../constants";
-import { auth, db } from "../FireBase/config";
 import { Link, useNavigate } from "react-router-dom";
+
+import { colorBg, colorOnBg } from "../constants";
+import { auth } from "../FireBase/config";
+import LoginProvider from "../FireBase/LoginProvider";
 import Loading from "./Loading";
-import { doc, setDoc } from "firebase/firestore";
 
 function Login(props) {
-  const provider = new FacebookAuthProvider();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const handleLogin = () => {
+  const FacebookLogin = () => {
     setLoading(true);
-    signInWithPopup(auth, provider)
-      .then(async (result) => {
-        if (result.user) {
-          const { isNewUser } = getAdditionalUserInfo(result);
-          if (isNewUser) {
-            await setDoc(doc(db, "users", result.user.uid), {
-              uid: result.user.uid,
-              displayName: result.user.displayName,
-              searchName: result.user.displayName.toLowerCase(),
-              email: result.user.email,
-              photoURL: result.user.photoURL,
-            });
-            await setDoc(doc(db, "userFriends", result.user.uid), {});
-          }
-          setLoading(false);
-          navigate("/");
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    const provider = new FacebookAuthProvider();
+    LoginProvider(provider);
+    navigate("/");
+    setLoading(false);
+  };
+  const GoogleLogin = () => {
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    LoginProvider(provider);
+    navigate("/");
+    setLoading(false);
+  };
+  const GithubLogin = () => {
+    setLoading(true);
+    const provider = new GithubAuthProvider();
+    LoginProvider(provider);
+    navigate("/");
+    setLoading(false);
   };
   const onSubmit = async (e) => {
     e.preventDefault();
     const email = e.target[0].value;
     const password = e.target[1].value;
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      console.log("singin with psw err", error);
+    if (!email || !password) {
+      alert("Please enter a value of the filed");
+    } else {
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
   return (
@@ -151,10 +151,13 @@ function Login(props) {
                     justifyContent: "center",
                   }}
                 >
-                  <Button onClick={handleLogin}>
+                  <Button onClick={FacebookLogin}>
                     <FacebookOutlinedIcon fontSize="large" />
                   </Button>
-                  <Button onClick={handleLogin}>
+                  <Button onClick={GithubLogin}>
+                    <GitHubIcon fontSize="large" />
+                  </Button>
+                  <Button onClick={GoogleLogin}>
                     <GoogleIcon fontSize="large" />
                   </Button>
                 </Box>

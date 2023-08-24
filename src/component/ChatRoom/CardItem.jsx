@@ -1,7 +1,7 @@
 import { Avatar, Box } from "@mui/material";
 import React, { memo } from "react";
 
-function Sibar({ user, lastMessage }) {
+function Card({ user, lastMessage }) {
   return (
     <Box
       sx={{
@@ -37,22 +37,22 @@ function Sibar({ user, lastMessage }) {
             overflow: "hidden",
             display: "-webkit-box",
             textOverflow: "ellipsis",
-            "-webkit-box-orient": "vertical",
-            "   -webkit-line-clamp": 1,
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 1,
             lineHeight: 1.2,
             height: "1.2rem",
           }}
         >
-          {lastMessage
+          {/* {lastMessage
             ? lastMessage && lastMessage.sendBy
               ? lastMessage.sendBy === user.uid
                 ? lastMessage.message
                 : `You: ` + lastMessage.message
               : lastMessage.message
-            : ""}
+            : ""} */}
         </p>
       </Box>
     </Box>
   );
 }
-export default memo(Sibar);
+export default memo(Card);

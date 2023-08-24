@@ -1,33 +1,67 @@
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
-import { Button, Input } from "@mui/material";
-import { Box } from "@mui/system";
 import SendIcon from "@mui/icons-material/Send";
-import React, { useRef, useState } from "react";
+import { Box } from "@mui/system";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  colorOnBg,
   colorOuter,
   colorOuterActive,
   colorTxt,
   colorTxtBlur,
 } from "../../../constants";
 
-function ChatWindow({ sendText, sendImg }) {
+function ChatWindow({ sendText, sendTextAndImg }) {
   const [text, setText] = useState("");
-  const img = useRef();
+  const [img, setImg] = useState();
+  const [preview, setPreview] = useState();
+  const ref = useRef();
+  const onChangeImg = (e) => {
+    const preview = URL.createObjectURL(e.target.files[0]);
+    setImg(e.target.files[0]);
+    setPreview(preview);
+  };
+  useEffect(() => {
+    return () => {
+      preview && URL.revokeObjectURL(preview);
+    };
+  }, [img]);
   const sendMessage = () => {
-    if (text) {
+    if (img) {
+      if (ref.current) {
+        const WIDTH = ref.current.naturalWidth;
+        const HEIGHT = ref.current.naturalHeight;
+        const encoder = 0.01;
+        let canvas = document.createElement("canvas");
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+        let cx = canvas.getContext("2d");
+        cx.drawImage(ref.current, 0, 0, WIDTH, HEIGHT);
+        const new_img = canvas.toDataURL("image/jpeg", encoder);
+        const file = urlTofile(new_img);
+        sendTextAndImg(file, img, text);
+      }
+    } else if (text) {
       sendText(text);
     }
-    if (img.current.files[0]) {
-      sendImg(text, img.current.files[0]);
-    }
     setText("");
-    img.current.value = null;
+    setImg(null);
   };
   const keyDown = (e) => {
     if (e.key === "Enter") {
       sendMessage();
     }
+  };
+  const urlTofile = (url) => {
+    let arr = url.split(",");
+    const mine = arr[0].match(/:(.*?);/)[1];
+    const data = arr[1];
+    let dataString = atob(data);
+    let n = dataString.length;
+    let dataArr = new Uint8Array(n);
+    while (n--) {
+      dataArr[n] = dataString.charCodeAt(n);
+    }
+    const file = new File([dataArr], "avatrt.jpg", { type: mine });
+    return file;
   };
   return (
     <Box
@@ -54,9 +88,24 @@ function ChatWindow({ sendText, sendImg }) {
           cursor: "pointer",
         }}
       >
-        <AddAPhotoIcon sx={{ fontSize: "0.9rem" }} />
+        {img ? (
+          <img
+            ref={ref}
+            id="img_img"
+            style={{ width: "100%", height: "100%", borderRadius: "10px" }}
+            src={preview}
+            alt="img"
+          />
+        ) : (
+          <AddAPhotoIcon sx={{ fontSize: "0.9rem" }} />
+        )}
       </label>
-      <input ref={img} id="img" type="file" style={{ display: "none" }} />
+      <input
+        id="img"
+        type="file"
+        style={{ display: "none" }}
+        onChange={onChangeImg}
+      />
       <input
         style={{
           flex: 1,
