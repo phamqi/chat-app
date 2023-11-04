@@ -9,9 +9,6 @@ import {
 import CardItem from "../../../CardItem";
 
 function NewFriend({ item, addFriend }) {
-  const handleAddFriend = () => {
-    addFriend(item);
-  };
   return (
     <Box
       key={item.uid}
@@ -29,11 +26,13 @@ function NewFriend({ item, addFriend }) {
         },
       }}
     >
-      <CardItem user={item} />
+      <CardItem item={item} />
       <Button
         type="button"
         aria-label="add-friend"
-        onClick={handleAddFriend}
+        onClick={() => {
+          addFriend(item);
+        }}
         sx={{
           minWidth: 0,
           color: `${colorTxtBlur}`,

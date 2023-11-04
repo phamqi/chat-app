@@ -1,74 +1,60 @@
-import { Button, Grid, IconButton } from "@mui/material";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import { Button, Grid } from "@mui/material";
 import { Box } from "@mui/system";
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { colorOuter, colorTxtBlur } from "../../constants";
 import { AuthContext } from "../../Context";
+import { colorOuter, colorTxtBlur } from "../../constants";
 import ChatWindow from "./ChatWindow";
 import SideBar from "./SideBar";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 function ChatRoom(props) {
   const [friend, setFriend] = useState();
   const [translate, setTranslate] = useState(false);
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const value = useContext(AuthContext);
   const getFriend = (childData) => {
     setFriend(childData);
     setTranslate(false);
   };
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
+    if (!value.user) {
+      navigate("/auth");
     }
-  }, [user]);
-
+  }, [value.user]);
+  const addEvents = (gridContainer) => {
+    try {
+      if (gridContainer) {
+        let start, move;
+        if (window.innerWidth < 600) {
+          gridContainer.ontouchstart = function (e) {
+            start = e.touches[0].clientX;
+          };
+          gridContainer.ontouchmove = function (e) {
+            move = e.touches[0].clientX;
+          };
+          gridContainer.ontouchend = function () {
+            if (start + 50 < move) {
+              setTranslate(false);
+            }
+            if (start - 50 > move) {
+              setTranslate(true);
+            }
+          };
+        } else {
+          setTranslate(false);
+          gridContainer.ontouchend = function () {};
+        }
+      }
+    } catch (error) {}
+  };
   useEffect(() => {
-    if (window.innerWidth < 600) {
-      setTranslate(true);
-    }
     const gridContainer = document.getElementById("grid_container");
-    const swip = () => {
-      let startX, moveX;
-      gridContainer.addEventListener(
-        "touchstart",
-        function (e) {
-          startX = e.touches[0].clientX;
-        },
-        { passive: false }
-      );
-      gridContainer.addEventListener(
-        "touchmove",
-        function (e) {
-          moveX = e.touches[0].clientX;
-        },
-        { passive: false }
-      );
-      gridContainer.addEventListener(
-        "touchend",
-        function (e) {
-          if (startX + 50 < moveX) {
-            setTranslate(false);
-          }
-          if (startX - 50 > moveX) {
-            setTranslate(true);
-          }
-        },
-        { passive: false }
-      );
-    };
-    return () => {
-      swip();
-    };
-  }, []);
-  useEffect(() => {
-    const mobileWidth = 600;
+    addEvents(gridContainer);
     const clean = () => {
       window.addEventListener("resize", function (e) {
-        if (this.window.innerWidth > mobileWidth) {
-          setTranslate(false);
-        }
+        addEvents(gridContainer);
       });
     };
     return () => {
@@ -82,7 +68,16 @@ function ChatRoom(props) {
     setTranslate(false);
   };
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        maxWidth: "1400px",
+        marginLeft: "auto",
+        marginRight: "auto",
+      }}
+    >
       <h3
         style={{
           height: "8%",
@@ -113,7 +108,7 @@ function ChatRoom(props) {
           xs={12}
           sm={7}
           md={8}
-          lg={8}
+          lg={9}
           px={1}
           sx={{
             height: "100%",
@@ -129,26 +124,35 @@ function ChatRoom(props) {
               type="button"
               sx={{
                 position: "absolute",
-                zIndex: "99999",
-                top: "3%",
-                right: "0%",
+                zIndex: "999",
+                top: "1.3rem",
+                right: "0",
                 color: `${colorTxtBlur}`,
                 minWidth: "30px",
                 height: "30px",
-                borderRadius: "15%",
                 display: { xs: "flex", sm: "none" },
                 padding: "0",
-                backgroundColor: `${colorOuter}`,
+                backgroundColor: "transparent",
                 border: `none`,
+                borderRadius: "8px",
+                "&:hover": {
+                  backgroundColor: `${colorOuter}`,
+                },
               }}
             >
               {translate ? (
-                <ArrowForwardIosIcon onClick={translateFalse} />
+                <ArrowForwardIosIcon
+                  onClick={translateFalse}
+                  sx={{ margin: "4px" }}
+                />
               ) : (
-                <ArrowBackIosNewIcon onClick={translateTrue} />
+                <ArrowBackIosNewIcon
+                  onClick={translateTrue}
+                  sx={{ margin: "4px" }}
+                />
               )}
             </Button>
-            <ChatWindow friend={friend} />
+            <ChatWindow friend={friend} user={value.user} />
           </Box>
         </Grid>
         <Grid
@@ -156,7 +160,7 @@ function ChatRoom(props) {
           xs={12}
           sm={5}
           md={4}
-          lg={4}
+          lg={3}
           px={1}
           sx={{
             height: "100%",
@@ -165,7 +169,11 @@ function ChatRoom(props) {
             zIndex: 2,
           }}
         >
-          <SideBar getFriend={getFriend} user={user} />
+          <SideBar
+            getFriend={getFriend}
+            logout={value.logout}
+            user={value.user}
+          />
         </Grid>
       </Grid>
     </Box>

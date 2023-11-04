@@ -4,8 +4,7 @@ import { colorOuterActive, colorTxt, colorTxtBlur } from "../../../constants";
 import CardItem from "../CardItem";
 import SentimentDissatisfiedOutlinedIcon from "@mui/icons-material/SentimentDissatisfiedOutlined";
 
-function Sibar({ selectFriend, friendList, loading }) {
-  console.log("abc", friendList);
+function ListFriend({ selectFriend, friendList, loading }) {
   const random = Math.floor(Math.random() * (6 - 3) + 3);
   return (
     <Box sx={{ padding: "8px 16px" }}>
@@ -30,18 +29,18 @@ function Sibar({ selectFriend, friendList, loading }) {
             />
           </Box>
         ))
-      ) : friendList && friendList.length > 0 ? (
+      ) : friendList?.length > 0 ? (
         friendList
-          .sort((a, b) => b[1].lastMessage.date - a[1].lastMessage.date)
-          .map((item) => (
+          .sort((a, b) => b.lastMessage.date - a.lastMessage.date)
+          .map((item, index) => (
             <Box
-              key={item[0]}
+              key={index}
               sx={{
                 display: "flex",
                 justifyContent: "flex-start",
                 alignItems: "flex-start",
                 borderRadius: "8px",
-                padding: "8px",
+                padding: "12px",
                 color: `${colorTxtBlur}`,
                 "&:hover": {
                   cursor: "pointer",
@@ -49,14 +48,9 @@ function Sibar({ selectFriend, friendList, loading }) {
                   backgroundColor: `${colorOuterActive}`,
                 },
               }}
-              onClick={() =>
-                selectFriend({ id: item[0], infor: item[1].infor })
-              }
+              onClick={() => selectFriend(item)}
             >
-              <CardItem
-                user={item[1].infor}
-                lastMessage={item[1].lastMessage && item[1].lastMessage}
-              />
+              <CardItem item={item} lastMessage={item?.lastMessage} />
             </Box>
           ))
       ) : (
@@ -79,4 +73,4 @@ function Sibar({ selectFriend, friendList, loading }) {
     </Box>
   );
 }
-export default memo(Sibar);
+export default memo(ListFriend);

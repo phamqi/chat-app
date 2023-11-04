@@ -1,7 +1,7 @@
 import { Avatar, Box } from "@mui/material";
 import React, { memo } from "react";
 
-function Card({ user, lastMessage }) {
+function Card({ item, lastMessage }) {
   return (
     <Box
       sx={{
@@ -11,7 +11,7 @@ function Card({ user, lastMessage }) {
       }}
     >
       <Avatar
-        src={user && user.photoURL}
+        src={item?.photoURL}
         alt="avatar"
         sx={{ height: "50px", width: "50px" }}
       ></Avatar>
@@ -25,7 +25,7 @@ function Card({ user, lastMessage }) {
         }}
       >
         <span style={{ fontSize: "1rem", fontWeight: 500 }}>
-          {user && user.displayName}
+          {item?.displayName}
         </span>
         <p
           style={{
@@ -43,13 +43,11 @@ function Card({ user, lastMessage }) {
             height: "1.2rem",
           }}
         >
-          {/* {lastMessage
-            ? lastMessage && lastMessage.sendBy
-              ? lastMessage.sendBy === user.uid
-                ? lastMessage.message
-                : `You: ` + lastMessage.message
-              : lastMessage.message
-            : ""} */}
+          {lastMessage
+            ? lastMessage.sendBy === item.uid
+              ? lastMessage.message
+              : `Bạn: ${lastMessage.message}`
+            : "Private message"}
         </p>
       </Box>
     </Box>

@@ -1,61 +1,79 @@
-import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
-import { Box } from "@mui/system";
 import CloseIcon from "@mui/icons-material/Close";
-import { colorTxtBlur } from "../../../constants";
+import { Box } from "@mui/system";
+import React, { useEffect, useRef, useState } from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
 
-function DialogImg(props) {
-  const [img, setImg] = useState();
-  const [showDialog, setShowDialog] = useState(false);
+import {
+  colorInner,
+  colorOuter,
+  colorOuterActive,
+  colorTxt,
+  colorTxtBlur,
+} from "../../../constants";
+
+function DialogImg({ item, showDialog, closeDialog }) {
+  const [loading, setLoading] = useState(false);
+  const [errorImg, setErrorImg] = useState(false);
+  const ref = useRef();
   useEffect(() => {
-    const imgs = document.querySelectorAll(".img_send");
-    imgs.forEach((item) => {
-      item.addEventListener("click", function (e) {
-        setShowDialog(true);
-        const lazyLoad = item.getAttribute("lazy-load");
-        setImg(lazyLoad);
-      });
-    });
-  });
-  const onCloseDialog = () => {
-    setShowDialog(false);
-  };
+    if (ref.current) {
+      ref.current.onload = function () {
+        setLoading(true);
+      };
+      ref.current.onerror = function () {
+        setErrorImg(true);
+      };
+    }
+  }, [item]);
   return (
-    <Box
+    <Dialog
+      open={showDialog && !errorImg}
+      onClose={closeDialog}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
       sx={{
-        display: `${showDialog ? "flex" : "none"}`,
-        position: "absolute",
-        top: "0",
-        left: "0",
-        justifyContent: "center",
-        alignItems: "center",
-        width: "100%",
-        height: "100%",
+        "& .MuiDialog-container": {
+          "& .MuiPaper-root": {
+            maxWidth: "unset",
+            borderRadius: "8px",
+          },
+        },
       }}
     >
-      <Box
+      <DialogContent
         sx={{
           position: "relative",
           maxWidth: "100%",
           maxHeight: "100%",
           width: "fit-content",
           height: "fit-content",
-          padding: "2px",
-          borderRadius: "8px",
-          border: `1px solid ${colorTxtBlur}`,
+          padding: "4px",
+          borderRadius: "12px",
         }}
       >
         <CloseIcon
-          onClick={onCloseDialog}
+          onClick={closeDialog}
           sx={{
             position: "absolute",
-            top: "0.4rem",
-            right: "0.4rem",
+            top: "0.6rem",
+            right: "0.6rem",
+            padding: "0.2rem",
             color: `${colorTxtBlur}`,
+            cursor: "pointer",
+            borderRadius: "25%",
+            "&:hover": {
+              color: `${colorOuterActive}`,
+              backgroundColor: `${colorTxtBlur}`,
+            },
           }}
         />
         <img
-          src={img ? img : ""}
+          ref={ref}
+          src={loading ? item?.img?.hight : item?.img?.low}
           alt="img"
           style={{
             width: "100%",
@@ -64,8 +82,8 @@ function DialogImg(props) {
             borderRadius: "8px",
           }}
         />
-      </Box>
-    </Box>
+      </DialogContent>
+    </Dialog>
   );
 }
 

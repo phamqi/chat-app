@@ -1,135 +1,74 @@
 import { Box } from "@mui/system";
-import {
-  arrayUnion,
-  collection,
-  collectionGroup,
-  doc,
-  limit,
-  onSnapshot,
-  query,
-  serverTimestamp,
-  setDoc,
-  Timestamp,
-  updateDoc,
-  where,
-} from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import React, { useContext, useEffect, useState } from "react";
-import { v4 as uuid } from "uuid";
+import React, { useEffect, useState } from "react";
 
+import { sendIMG, sendText, updateLastMessage } from "../../../FireBase";
+import { db } from "../../../FireBase/config";
 import { colorInner, colorOuter, colorTxtBlur } from "../../../constants";
-import { AuthContext } from "../../../Context";
-import { db, storage } from "../../../FireBase/config";
 import Loading from "../../Loading";
 import CardItem from "../CardItem";
-import DialogImg from "./DialogImg";
 import EmptyFriendSelect from "./EmptyFriendSelect";
 import MessageBox from "./MessageBox";
 import TypingChat from "./TypingChat";
 
-function ChatWindow({ friend }) {
-  const { user } = useContext(AuthContext);
-  const [message, setMessage] = useState();
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState([]);
-  const sendText = async (text) => {
-    try {
-      const id = "messsage" + Date.now();
-      await setDoc(doc(db, `chats/${friend.id}/messages`, id), {
-        id: id,
-        message: text,
-        sendBy: user.uid,
-        sendAt: serverTimestamp(),
-        hidden: false,
-      });
-      await updateDoc(doc(db, "userFriends", friend.infor.uid), {
-        [friend.id + ".lastMessage"]: {
-          sendBy: user.uid,
-          message: text,
-          date: serverTimestamp(),
-        },
-      });
-      await updateDoc(doc(db, "userFriends", user.uid), {
-        [friend.id + ".lastMessage"]: {
-          sendBy: user.uid,
-          message: text,
-          date: serverTimestamp(),
-        },
-      });
-    } catch (error) {
-      console.log("Something went wrong", error);
-    }
-  };
+import { query } from "firebase/database";
 
-  const sendTextAndImg = async (PlaceholderImg, img, text) => {
+function ChatWindow({ friend, user }) {
+  const [message, setMessage] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const boxChatID = friend?.uid === user?.uid ? user?.uid : friend?.boxId;
+  const sendTextAndImg = async (text, PlaceholderImg, img) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const id = "messsage" + Date.now();
-      const PlaceholderStorageRef = ref(storage, uuid());
-      const storageRef = ref(storage, uuid());
-      uploadBytesResumable(PlaceholderStorageRef, PlaceholderImg).then(() => {
-        getDownloadURL(PlaceholderStorageRef).then(async (PlaceholderURL) => {
-          await setDoc(doc(db, "chats", friend.id, "messages", id), {
-            id: id,
-            message: text,
-            sendBy: user.uid,
-            sendAt: serverTimestamp(),
-            hidden: false,
-            img: {
-              low: PlaceholderURL,
-              hight: "",
-            },
-          });
-          setLoading(false);
-        });
-      });
-      uploadBytesResumable(storageRef, img).then(() => {
-        getDownloadURL(storageRef).then(async (downloadURL) => {
-          await updateDoc(doc(db, "chats", friend.id, "messages", id), {
-            "img.hight": downloadURL,
-          });
-        });
-      });
-      await updateDoc(doc(db, "userFriends", friend.infor.uid), {
-        [friend.id + ".lastMessage"]: {
-          message: "Image ",
-          date: serverTimestamp(),
-        },
-      });
-      await updateDoc(doc(db, "userFriends", user.uid), {
-        [friend.id + ".lastMessage"]: {
-          message: "Image ",
-          date: serverTimestamp(),
-        },
-      });
-    } catch (error) {
-      console.log("Something went wrong", error);
-    }
-  };
-  const onHiddenMessage = async (id) => {
-    try {
-      await updateDoc(doc(db, "chats", friend.id, "messages", id), {
-        hidden: true,
-      });
+      sendIMG(boxChatID, user.uid, text, PlaceholderImg, img);
+      if (friend.uid !== user.uid) {
+        updateLastMessage(friend.uid, user.uid, "Hình ảnh");
+      }
+      setLoading(false);
     } catch (error) {}
   };
-  useEffect(() => {
-    const getMessage = () => {
-      onSnapshot(
-        query(collection(db, `chats/${friend.id}/messages`), limit(30)),
-        where("id", "=", friend.id),
-        (snapshot) => {
-          setMessage(
-            snapshot.docs.map((doc) => {
-              return { ...doc.data() };
-            })
-          );
+  const sendTextMsg = (text) => {
+    if (text) {
+      try {
+        sendText(boxChatID, user.uid, text);
+        if (friend.uid !== user.uid) {
+          updateLastMessage(friend.uid, user.uid, text);
         }
-      );
+      } catch (error) {}
+    }
+  };
+  useEffect(() => {
+    const clean = async () => {
+      const boxChatID = friend.uid === user.uid ? user.uid : friend.boxId;
+      const q = query(doc(db, "chats", boxChatID));
+      // const q = query(doc(db, "chats", friend.boxId), where("1", "==", "1"));
+      onSnapshot(q, (querySnapshot) => {
+        if (querySnapshot.data() !== undefined) {
+          setMessage(querySnapshot.data().messages);
+        } else {
+        }
+      });
     };
-    friend && getMessage();
-  }, [friend, message]);
+
+    // const clean = async () => {
+    //   onSnapshot(
+    //     query(doc(db, "chats", friend.boxId), limit(10)),
+    //     (snapshot) => {
+    //       const messagesData = snapshot.docs.map((doc) => doc.data().message);
+    //       console.log("snapshot.docs", snapshot);
+    //       setMessage(messagesData)w;
+    //     }
+    //   );
+    // };
+
+    // const clean = async () => {
+    //   onSnapshot(doc(db, "chats", friend.boxId), (doc) => {
+    //     setMessage(doc.data().messages);
+    //   });
+    // };
+    friend && clean();
+  }, [friend]);
   return (
     <Box
       sx={{
@@ -159,15 +98,13 @@ function ChatWindow({ friend }) {
                 borderBottom: `3px solid ${colorOuter}`,
               }}
             >
-              <CardItem user={friend.infor} />
+              <CardItem item={friend} />
             </Box>
-            <MessageBox
-              message={message}
-              friend={friend.infor}
-              onHiddenMessage={onHiddenMessage}
+            <MessageBox message={message} friend={friend} />
+            <TypingChat
+              sendTextAndImg={sendTextAndImg}
+              sendText={sendTextMsg}
             />
-            <TypingChat sendText={sendText} sendTextAndImg={sendTextAndImg} />
-            <DialogImg />
           </>
         ) : (
           <EmptyFriendSelect />

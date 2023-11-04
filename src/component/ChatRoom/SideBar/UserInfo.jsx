@@ -17,7 +17,7 @@ function UserInfo({ handleLogout, user }) {
         color: `${colorTxtBlur}`,
       }}
     >
-      <CardItem user={user} />
+      <CardItem item={user} />
       <Box>
         <Button
           onClick={handleLogout}

@@ -27,21 +27,14 @@ const createUser = async (displayName, email, password, img) => {
               email,
               photoURL: downloadURL,
             }),
-            await setDoc(
-              doc(db, "chats", res.user.uid, "friends", res.user.uid),
-              {
-                message: "Get started",
-                sendBy: "admin",
-                sendAt: serverTimestamp(),
-                hidden: false,
-              }
-            ),
+            await setDoc(doc(db, "friends", res.user.uid), {}),
+            await setDoc(doc(db, "chats", res.user.uid), {
+              messages: [],
+            }),
           ]);
         });
       }
     );
-  } catch (error) {
-    console.log(error);
-  }
+  } catch (error) {}
 };
 export default createUser;

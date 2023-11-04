@@ -1,14 +1,14 @@
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button, InputBase } from "@mui/material";
-import React, { memo, useEffect, useState } from "react";
+import React, { Fragment, memo, useContext, useState } from "react";
+import { AlertContext } from "../../../../AlertContext";
+import { SearchUser, addFriend } from "../../../../FireBase";
 import {
   colorOuterActive,
   colorTxt,
   colorTxtBlur,
-  EmptySearchMsg,
 } from "../../../../constants";
-import CardItem from "../../CardItem";
 import {
   Friend,
   NewFriend,
@@ -16,44 +16,39 @@ import {
   SkeletonSearch,
   YourSelf,
 } from "./SearchItem";
-import { SearchUser, addFriend } from "../../../../FireBase";
-import { useMemo } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../../../FireBase/config";
 
-function Sibar({ friendList, onSelectFriend, user }) {
+function Search({ friendList, onSelectFriend, user }) {
   const [search, setSearch] = useState("");
   const [dataSearch, setDataSearch] = useState([]);
   const [searchShow, setSearchShow] = useState(false);
 
-  useEffect(() => {
-    const abc = async () => {
-      const res = await getDoc(doc(db, `chats/${user.uid}`));
-      console.log("res exist", res.exists());
-    };
-    user && abc();
-  }, [user]);
-
+  const handleAlert = useContext(AlertContext);
   const Search = async (search) => {
     setSearchShow(true);
     setSearch(search);
     const data = await SearchUser(search);
     setDataSearch(data);
-    console.log("data in search", data, dataSearch);
   };
-
   const closeSearch = () => {
     setDataSearch([]);
     setSearchShow(false);
     setSearch("");
   };
-  const handleAddFriend = (item) => {
+  const AddFriend = (item) => {
     addFriend(item, user);
-    console.log("alo alo");
     closeSearch();
   };
-  const handleSelectFriend = (friend) => {
-    onSelectFriend(friend);
+  const onSelect = (item) => {
+    try {
+      if (item.uid === !user.uid) {
+        const result = friendList.filter((i) => i.uid === item.uid);
+        onSelectFriend(result[0]);
+      } else {
+        onSelectFriend(item);
+      }
+    } catch (error) {
+      handleAlert("error", error.message);
+    }
     closeSearch();
   };
   return (
@@ -106,13 +101,17 @@ function Sibar({ friendList, onSelectFriend, user }) {
       </Box>
       <Box sx={{ display: `${searchShow ? "block" : "none"}` }}>
         {dataSearch ? (
-          dataSearch.length > 1 ? (
+          dataSearch.length > 0 ? (
             dataSearch?.map((item) => (
-              <NewFriend
-                key={item.uid}
-                item={item}
-                addFriend={handleAddFriend}
-              />
+              <Fragment key={item.uid}>
+                {item.uid === user?.uid ? (
+                  <YourSelf item={item} onSelect={onSelect} />
+                ) : friendList.find((i) => i.uid === item.uid) ? (
+                  <Friend item={item} onSelect={onSelect} />
+                ) : (
+                  <NewFriend key={item.uid} item={item} addFriend={AddFriend} />
+                )}
+              </Fragment>
             ))
           ) : (
             <NullSearch />
@@ -124,4 +123,4 @@ function Sibar({ friendList, onSelectFriend, user }) {
     </Box>
   );
 }
-export default memo(Sibar);
+export default memo(Search);

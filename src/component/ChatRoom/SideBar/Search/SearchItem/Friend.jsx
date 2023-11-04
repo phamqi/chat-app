@@ -2,10 +2,7 @@ import { Box } from "@mui/material";
 import React from "react";
 import { colorOuterActive, colorTxtBlur } from "../../../../../constants";
 import CardItem from "../../../CardItem";
-function Friend({ infor, id, lastMessage, onSelectFriend }) {
-  const handleSelectFriend = () => {
-    onSelectFriend({ id: id, infor: infor });
-  };
+function Friend({ item, onSelect }) {
   return (
     <Box
       sx={{
@@ -21,9 +18,11 @@ function Friend({ infor, id, lastMessage, onSelectFriend }) {
           backgroundColor: `${colorOuterActive}`,
         },
       }}
-      onClick={handleSelectFriend}
+      onClick={() => {
+        onSelect(item);
+      }}
     >
-      <CardItem user={infor} lastMessage={lastMessage} />
+      <CardItem item={item} />
     </Box>
   );
 }

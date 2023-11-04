@@ -3,12 +3,8 @@ import { Box } from "@mui/material";
 import { colorOuterActive, colorTxtBlur } from "../../../../../constants";
 import CardItem from "../../../CardItem";
 
-export default function YourSelf({ item, onSelectFriend }) {
-  const handleSelectFriend = () => {
-    onSelectFriend({ id: item.uid, infor: item });
-  };
-
-  const convertInfor = { ...item, displayName: item.displayName + " (You)" };
+export default function YourSelf({ item, onSelect }) {
+  const convertInfo = { ...item, displayName: item.displayName + " (You)" };
   return (
     <Box
       sx={{
@@ -24,9 +20,11 @@ export default function YourSelf({ item, onSelectFriend }) {
           backgroundColor: `${colorOuterActive}`,
         },
       }}
-      onClick={handleSelectFriend}
+      onClick={() => {
+        onSelect(item);
+      }}
     >
-      <CardItem user={convertInfor} lastMessage={"Private message"} />
+      <CardItem item={convertInfo} />
     </Box>
   );
 }

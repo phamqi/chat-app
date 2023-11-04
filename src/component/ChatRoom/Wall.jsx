@@ -4,6 +4,7 @@ import React from "react";
 function Wall({ text, bgColor, txtColor }) {
   return (
     <Box
+      className="wall"
       sx={{
         marginLeft: "auto",
         marginRight: "auto",
@@ -16,6 +17,7 @@ function Wall({ text, bgColor, txtColor }) {
         marginTop: "0.7rem",
         marginBottom: "0.5rem",
         opacity: 0.8,
+        userSelect: "none",
       }}
     >
       <span

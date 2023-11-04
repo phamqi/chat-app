@@ -23,7 +23,6 @@ const SearchUser = async (search) => {
       uid: doc.data().uid,
     });
   });
-  console.log(data);
   return data;
 };
 export default SearchUser;

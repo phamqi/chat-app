@@ -1,27 +1,24 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Button } from "@mui/material";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 
-import { colorOuter, colorTxtBlur } from "../../../../constants";
+import {
+  colorBg,
+  colorOuter,
+  colorOuterActive,
+  colorTxtBlur,
+} from "../../../../constants";
 
-function ScrollToBottom({ loading, message }) {
+function ScrollToBottom({ loading }) {
   const [scrollUp, setScrollUp] = useState(false);
-  const [msg, setMsg] = useState(null);
+  const ref = useRef();
   const scrollToBottom = () => {
-    msg.scroll({
-      top: msg.scrollHeight,
-      left: 0,
-      behavior: "smooth",
-    });
+    ref.current?.scrollIntoView();
     setScrollUp(false);
   };
   useEffect(() => {
-    if (msg) {
-      scrollToBottom();
-    }
-    const onScoll = () => {
+    const onScroll = () => {
       const msgBox = document.querySelector("#msg_box");
-      setMsg(msgBox);
       if (msgBox) {
         msgBox.addEventListener("wheel", function (e) {
           if (msgBox.scrollTop + 700 < msgBox.scrollHeight) {
@@ -32,32 +29,41 @@ function ScrollToBottom({ loading, message }) {
         });
       }
     };
-    //
     return () => {
-      onScoll();
+      onScroll();
     };
-  }, [msg, loading, message]);
+  }, []);
+  useEffect(() => {
+    scrollToBottom();
+  }, [loading]);
   return (
-    <Button
-      onClick={scrollToBottom}
-      type="button"
-      sx={{
-        position: "absolute",
-        zIndex: "99999",
-        bottom: "9%",
-        right: "9%",
-        color: `${colorTxtBlur}`,
-        minWidth: "35px",
-        height: "35px",
-        borderRadius: "50%",
-        display: `${scrollUp ? "flex" : "none"}`,
-        padding: "0",
-        backgroundColor: `${colorOuter}`,
-        boxShadow: `0 0 1px  ${colorTxtBlur}`,
-      }}
-    >
-      <ExpandMoreIcon />
-    </Button>
+    <div>
+      <Button
+        onClick={scrollToBottom}
+        type="button"
+        sx={{
+          minWidth: "0",
+          position: "fixed",
+          zIndex: "99999",
+          bottom: "13rem",
+          right: "2rem",
+          color: `${colorTxtBlur}`,
+          width: "2.5rem",
+          height: "2.5rem",
+          borderRadius: "50%",
+          display: `${scrollUp ? "flex" : "none"}`,
+          padding: "0",
+          backgroundColor: `${colorOuter}`,
+          boxShadow: `0 0 1px  ${colorTxtBlur}`,
+          "&:hover": {
+            backgroundColor: `${colorBg}`,
+          },
+        }}
+      >
+        <ExpandMoreIcon />
+      </Button>
+      <div ref={ref}></div>
+    </div>
   );
 }
 

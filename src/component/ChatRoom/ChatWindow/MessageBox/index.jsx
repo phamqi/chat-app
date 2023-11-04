@@ -1,117 +1,153 @@
-import { formatISO, formatRelative, fromUnixTime } from "date-fns";
-import { doc, updateDoc } from "firebase/firestore";
+import { format } from "date-fns";
+import { doc, limit, onSnapshot, query } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import React, {
+  Fragment,
+  memo,
   useContext,
   useEffect,
   useMemo,
   useRef,
-  memo,
   useState,
 } from "react";
 
-import { colorInner, colorOuter, colorTxtBlur } from "../../../../constants";
+import { Box } from "@mui/material";
 import { AuthContext } from "../../../../Context";
+import { hidden } from "../../../../FireBase";
 import { db } from "../../../../FireBase/config";
+import { colorInner, colorTxtBlur } from "../../../../constants";
 import Wall from "../../Wall";
 import Message from "./Message";
 import ScrollToBottom from "./ScrollToBottom";
-import { Box } from "@mui/material";
+import createStyle from "./createStyles";
+import DialogImg from "../DialogImg";
 
-function MessageBox({ message, friend, onHiddenMessage }) {
-  console.log("message in Message Box", message);
+function MessageBox({ message, friend }) {
   const { user } = useContext(AuthContext);
-  const [loading, setLoading] = useState(true);
-  const subUserUId = `${"classes_" + user.uid.substring(5, 15)}`;
-  const subFriendUId = `${"classes_" + friend.uid.substring(5, 15)}`;
-  const createStyle = () => {
-    const style = document.createElement("style");
-    style.textContent = `
-      .${subUserUId}+.${subFriendUId} .avatar {
-        opacity: 1;
-      }
-      .${subFriendUId}+.${subUserUId} .avatar  {
-        opacity: 1;
-      }
-      .${subFriendUId}:first-child .avatar {
-        opacity: 1;
-      }
-      .${subUserUId}:first-child .avatar {
-        opacity: 1;
-      }
-    `;
-    document.head.appendChild(style);
-  };
+  const [showDialog, setShowDialog] = useState(false);
+  const [showItem, setShowItem] = useState(false);
+  const classesUser = `${"classes_" + user.uid.substring(5, 15)}`;
+  const classesFriend = `${"classes_" + friend?.uid.substring(5, 15)}`;
+
   useMemo(() => {
-    createStyle();
-  }, [friend]);
-  const hiddenMessage = (id) => {
-    onHiddenMessage(id);
+    if (friend?.uid !== user.uid) {
+      createStyle(classesUser, classesFriend);
+    }
+  }, [classesUser, classesFriend]);
+  const hiddenMessage = (item) => {
+    hidden(friend.boxId, item);
+  };
+  const formatDate = (seconds) => {
+    const date = format(new Date(seconds * 1000), "dd-MM-yyyy").split("-");
+    const result = `${date[0]} tháng ${date[1]} năm ${date[2]}`;
+    return result;
   };
   const date = (seconds, index) => {
     if (index === 0) {
-      const date = formatISO(new Date(seconds * 1000), {
-        representation: "date",
-      });
-      return <Wall text={date} bgColor={colorInner} txtColor={colorTxtBlur} />;
+      const result = formatDate(seconds);
+      return (
+        <Wall text={result} bgColor={colorInner} txtColor={colorTxtBlur} />
+      );
     }
     if (
       index > 0 &&
       Math.floor(seconds / 100000) !==
         Math.floor(message[index - 1].sendAt.seconds / 100000)
     ) {
-      const date = formatISO(new Date(seconds * 1000), {
-        representation: "date",
-      });
-      return <Wall text={date} bgColor={colorInner} txtColor={colorTxtBlur} />;
+      const result = formatDate(seconds);
+      return (
+        <Wall text={result} bgColor={colorInner} txtColor={colorTxtBlur} />
+      );
     } else {
       return "";
     }
   };
+  const onShowDialog = (item) => {
+    setShowDialog(true);
+    setShowItem(item);
+  };
+  const closeDialog = () => {
+    setShowDialog(false);
+  };
   return (
     <Box
       sx={{
-        overflowY: "auto",
-        overflowX: "hidden",
-        flex: 1,
+        flex: "1 1 auto",
         position: "relative",
       }}
     >
-      <ScrollToBottom loading={message} />
       <Box
         sx={{
-          overflowY: "auto",
+          position: "absolute",
+          top: 0,
+          right: 0,
+          left: 0,
+          bottom: 0,
+          overflowY: "scroll",
           overflowX: "hidden",
-          height: "100%",
-          padding: "0 0.8rem",
+          overflowAnchor: "none",
+          padding: "0",
           color: `${colorTxtBlur}`,
+          boxSizing: "border-box",
         }}
         id="msg_box"
       >
-        {message &&
-          Array.isArray(message) &&
-          message.map((index, item) => (
-            <>
-              {date(item.sendAt.seconds, index)}
-              {item.sendBy === user.uid ? (
-                <Message
-                  key={item.id}
-                  item={item}
-                  photoURL={user.photoURL}
-                  reverse={true}
-                  className={subUserUId}
-                  hiddenMessage={hiddenMessage}
-                />
-              ) : (
-                <Message
-                  key={item.id}
-                  item={item}
-                  photoURL={friend.photoURL}
-                  className={subFriendUId}
-                />
-              )}
-            </>
-          ))}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "stretch",
+            justifyContent: "flex-end",
+            position: "relative",
+            overflowAnchor: "none",
+            minHeight: "100%",
+            WebkitBoxPack: "end",
+          }}
+        >
+          <ul
+            style={{
+              listStyle: "none",
+              overflow: "hidden",
+              margin: 0,
+              padding: 0,
+              border: 0,
+            }}
+          >
+            {message.length > 0 &&
+              Array.isArray(message) &&
+              message.map((item, index) => (
+                <Fragment key={item.id}>
+                  {date(item?.sendAt?.seconds, index)}
+                  {item.sendBy === user.uid ? (
+                    <Message
+                      item={item}
+                      photoURL={user.photoURL}
+                      displayName={user.displayName}
+                      reverse={true}
+                      className={classesUser}
+                      hiddenMessage={hiddenMessage}
+                      handleShowDialog={onShowDialog}
+                    />
+                  ) : (
+                    <Message
+                      item={item}
+                      photoURL={friend.photoURL}
+                      displayName={friend.displayName}
+                      className={classesFriend}
+                      handleShowDialog={onShowDialog}
+                    />
+                  )}
+                </Fragment>
+              ))}
+          </ul>
+          <ScrollToBottom loading={message} />
+        </Box>
       </Box>
+      <DialogImg
+        item={showItem}
+        showDialog={showDialog}
+        closeDialog={closeDialog}
+      />
     </Box>
   );
 }

@@ -1,10 +1,13 @@
-import { Container } from "@mui/material";
+import { Box, Container, Grid } from "@mui/material";
 import React, { useMemo } from "react";
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
 import { ChatRoom, Login, Register } from "./component";
 import { colorBg, colorOuter, colorOuterActive } from "./constants";
 import AuthProvider from "./Context";
+import AlertProvider from "./AlertContext";
+import Auth from "./component/Auth";
+import ErrorPage from "./component/ErrorPage";
 
 function App() {
   const createStyle = () => {
@@ -33,21 +36,19 @@ function App() {
   }, []);
   return (
     <div style={{ backgroundColor: `${colorBg}`, height: "100%" }}>
-      <Container
+      <Box
         sx={{
           height: "100%",
-          paddingLeft: { xs: "0", sm: "10px", md: "16px" },
-          paddingRight: { xs: "0", sm: "10px", md: "16px" },
+          paddingLeft: { xs: "0", sm: "8px", md: "16px" },
+          paddingRight: { xs: "0", sm: "8px", md: "16px" },
         }}
       >
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<ChatRoom />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Routes>
-        </AuthProvider>
-      </Container>
+        <Routes>
+          <Route path="/" element={<ChatRoom />} />
+          <Route path="/auth/*" element={<Auth />} />
+          <Route path="*" element={<ErrorPage />} />
+        </Routes>
+      </Box>
     </div>
   );
 }
